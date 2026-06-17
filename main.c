@@ -119,7 +119,7 @@ int main(int argc, char *argv[])
     apply_dark_theme();
 
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_title(GTK_WINDOW(window), "Termulate GUI");
+    gtk_window_set_title(GTK_WINDOW(window), "Termulate");
     gtk_window_set_default_size(GTK_WINDOW(window), 800, 500);
 
     g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
@@ -136,7 +136,7 @@ int main(int argc, char *argv[])
 
     g_signal_connect(text_view, "key-press-event", G_CALLBACK(on_key_press), NULL);
 
-    appendOutput("Welcome to Termulate GUI\n");
+    appendOutput("Welcome to Termulate\n");
     appendOutput("\n");
 appendOutput(
 "████████╗███████╗██████╗ ███╗   ███╗██╗   ██╗██╗      █████╗ ████████╗███████╗\n"

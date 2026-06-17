@@ -130,32 +130,86 @@ void apply_dark_theme(void)
 
     gtk_css_provider_load_from_data(
         provider,
-        "window { background-color: #0c0c0c; }"
-        "notebook { background-color: #0c0c0c; }"
-        "textview {"
-        "   background-color: #0c0c0c;"
-        "   color: #00ff66;"
+
+        "window {"
+        "   background-color: #0b0f10;"
+        "}"
+
+        ".top-bar {"
+        "   background-color: #111718;"
+        "   padding: 6px;"
+        "   border-bottom: 1px solid #1f2a2c;"
+        "}"
+
+        ".app-title {"
+        "   color: #00ff88;"
         "   font-family: Consolas, monospace;"
         "   font-size: 15px;"
+        "   font-weight: bold;"
+        "   margin-left: 8px;"
         "}"
-        "textview text {"
-        "   background-color: #0c0c0c;"
-        "   color: #00ff66;"
-        "   caret-color: #00ff66;"
-        "}"
-        "button {"
-        "   background-color: #1e1e1e;"
-        "   color: #00ff66;"
+
+        ".plus-button {"
+        "   background: #1b2527;"
+        "   color: #00ff88;"
+        "   border-radius: 8px;"
+        "   border: 1px solid #263638;"
+        "   padding: 4px 12px;"
+        "   font-size: 18px;"
         "   font-weight: bold;"
         "}"
-        "scrolledwindow { background-color: #0c0c0c; }",
+
+        ".plus-button:hover {"
+        "   background: #243133;"
+        "}"
+
+        "notebook {"
+        "   background-color: #0b0f10;"
+        "   border: none;"
+        "}"
+
+        "notebook tab {"
+        "   background: #111718;"
+        "   color: #8cffc1;"
+        "   padding: 7px 14px;"
+        "   border-radius: 8px 8px 0 0;"
+        "   margin: 2px;"
+        "}"
+
+        "notebook tab:checked {"
+        "   background: #182224;"
+        "   color: #00ff88;"
+        "   border-bottom: 2px solid #00ff88;"
+        "}"
+
+        "textview {"
+        "   background-color: #0b0f10;"
+        "   color: #00ff88;"
+        "   font-family: Consolas, monospace;"
+        "   font-size: 15px;"
+        "   padding: 12px;"
+        "}"
+
+        "textview text {"
+        "   background-color: #0b0f10;"
+        "   color: #00ff88;"
+        "   caret-color: #00ff88;"
+        "}"
+
+        "scrolledwindow {"
+        "   background-color: #0b0f10;"
+        "   border: none;"
+        "}",
+
         -1,
-        NULL);
+        NULL
+    );
 
     gtk_style_context_add_provider_for_screen(
         gdk_screen_get_default(),
         GTK_STYLE_PROVIDER(provider),
-        GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+        GTK_STYLE_PROVIDER_PRIORITY_APPLICATION
+    );
 
     g_object_unref(provider);
 }
@@ -173,18 +227,24 @@ int main(int argc, char *argv[])
 
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(window), "Termulate GUI");
-    gtk_window_set_default_size(GTK_WINDOW(window), 800, 500);
+    gtk_window_set_default_size(GTK_WINDOW(window), 900, 550);
 
     g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
 
     main_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_container_add(GTK_CONTAINER(window), main_box);
 
-    top_bar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
-    gtk_box_pack_start(GTK_BOX(main_box), top_bar, FALSE, FALSE, 5);
+    top_bar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
+    gtk_style_context_add_class(gtk_widget_get_style_context(top_bar), "top-bar");
+    gtk_box_pack_start(GTK_BOX(main_box), top_bar, FALSE, FALSE, 0);
+
+    GtkWidget *title = gtk_label_new("Termulate");
+    gtk_style_context_add_class(gtk_widget_get_style_context(title), "app-title");
+    gtk_box_pack_start(GTK_BOX(top_bar), title, FALSE, FALSE, 8);
 
     plus_button = gtk_button_new_with_label("+");
-    gtk_box_pack_start(GTK_BOX(top_bar), plus_button, FALSE, FALSE, 5);
+    gtk_style_context_add_class(gtk_widget_get_style_context(plus_button), "plus-button");
+    gtk_box_pack_end(GTK_BOX(top_bar), plus_button, FALSE, FALSE, 8);
 
     notebook = gtk_notebook_new();
     gtk_box_pack_start(GTK_BOX(main_box), notebook, TRUE, TRUE, 0);

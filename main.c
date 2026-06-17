@@ -4,6 +4,9 @@
 #include "commands.h"
 
 GtkWidget *text_view;
+GtkWidget *notebook;
+
+int session_count = 0;
 
 void appendOutput(const char *text)
 {
@@ -23,9 +26,9 @@ void clearScreen(void)
     gtk_text_buffer_set_text(buffer, "", -1);
 }
 
-static char *get_current_line_text(void)
+static char *get_current_line_text(GtkWidget *current_text_view)
 {
-    GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(text_view));
+    GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(current_text_view));
     GtkTextIter start, end;
 
     gtk_text_buffer_get_iter_at_mark(buffer, &end, gtk_text_buffer_get_insert(buffer));
@@ -38,9 +41,11 @@ static char *get_current_line_text(void)
 
 gboolean on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer data)
 {
+    text_view = widget;
+
     if (event->keyval == GDK_KEY_Return)
     {
-        char *line = get_current_line_text();
+        char *line = get_current_line_text(widget);
 
         char *prompt = strrchr(line, '>');
         char *input = prompt ? prompt + 1 : line;
@@ -59,8 +64,7 @@ gboolean on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer data)
         }
         else if (strcmp(input, "exit") == 0)
         {
-            appendOutput("Exiting Termulate...\n");
-            gtk_main_quit();
+            appendOutput("Exiting this Termulate session...\n");
         }
         else
         {
@@ -68,11 +72,56 @@ gboolean on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer data)
         }
 
         g_free(line);
-
         return TRUE;
     }
 
     return FALSE;
+}
+
+void add_welcome_message(void)
+{
+    appendOutput("Welcome to Termulate GUI\n\n");
+
+    appendOutput(
+"████████╗███████╗██████╗ ███╗   ███╗██╗   ██╗██╗      █████╗ ████████╗███████╗\n"
+"╚══██╔══╝██╔════╝██╔══██╗████╗ ████║██║   ██║██║     ██╔══██╗╚══██╔══╝██╔════╝\n"
+"   ██║   █████╗  ██████╔╝██╔████╔██║██║   ██║██║     ███████║   ██║   █████╗\n"
+"   ██║   ██╔══╝  ██╔══██╗██║╚██╔╝██║██║   ██║██║     ██╔══██║   ██║   ██╔══╝\n"
+"   ██║   ███████╗██║  ██║██║ ╚═╝ ██║╚██████╔╝███████╗██║  ██║   ██║   ███████╗\n"
+"   ╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝ ╚═════╝ ╚══════╝╚═╝  ╚═╝   ╚═╝   ╚══════╝\n"
+    );
+
+    appendOutput("\nType 'help' to see available commands.\n\n");
+    appendOutput("Termulate> ");
+}
+
+void create_new_session(GtkWidget *button, gpointer data)
+{
+    session_count++;
+
+    GtkWidget *scroll = gtk_scrolled_window_new(NULL, NULL);
+    GtkWidget *new_text_view = gtk_text_view_new();
+
+    gtk_text_view_set_editable(GTK_TEXT_VIEW(new_text_view), TRUE);
+    gtk_text_view_set_cursor_visible(GTK_TEXT_VIEW(new_text_view), TRUE);
+    gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(new_text_view), GTK_WRAP_WORD_CHAR);
+
+    gtk_container_add(GTK_CONTAINER(scroll), new_text_view);
+
+    g_signal_connect(new_text_view, "key-press-event", G_CALLBACK(on_key_press), NULL);
+
+    char tab_name[50];
+    snprintf(tab_name, sizeof(tab_name), "Session %d", session_count);
+
+    GtkWidget *label = gtk_label_new(tab_name);
+
+    int page_num = gtk_notebook_append_page(GTK_NOTEBOOK(notebook), scroll, label);
+    gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook), page_num);
+
+    text_view = new_text_view;
+    add_welcome_message();
+
+    gtk_widget_show_all(scroll);
 }
 
 void apply_dark_theme(void)
@@ -81,9 +130,8 @@ void apply_dark_theme(void)
 
     gtk_css_provider_load_from_data(
         provider,
-        "window {"
-        "   background-color: #0c0c0c;"
-        "}"
+        "window { background-color: #0c0c0c; }"
+        "notebook { background-color: #0c0c0c; }"
         "textview {"
         "   background-color: #0c0c0c;"
         "   color: #00ff66;"
@@ -95,9 +143,12 @@ void apply_dark_theme(void)
         "   color: #00ff66;"
         "   caret-color: #00ff66;"
         "}"
-        "scrolledwindow {"
-        "   background-color: #0c0c0c;"
-        "}",
+        "button {"
+        "   background-color: #1e1e1e;"
+        "   color: #00ff66;"
+        "   font-weight: bold;"
+        "}"
+        "scrolledwindow { background-color: #0c0c0c; }",
         -1,
         NULL);
 
@@ -114,41 +165,33 @@ int main(int argc, char *argv[])
     gtk_init(&argc, &argv);
 
     GtkWidget *window;
-    GtkWidget *scroll;
+    GtkWidget *main_box;
+    GtkWidget *top_bar;
+    GtkWidget *plus_button;
 
     apply_dark_theme();
 
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_title(GTK_WINDOW(window), "Termulate");
+    gtk_window_set_title(GTK_WINDOW(window), "Termulate GUI");
     gtk_window_set_default_size(GTK_WINDOW(window), 800, 500);
 
     g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
 
-    scroll = gtk_scrolled_window_new(NULL, NULL);
-    gtk_container_add(GTK_CONTAINER(window), scroll);
+    main_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    gtk_container_add(GTK_CONTAINER(window), main_box);
 
-    text_view = gtk_text_view_new();
-    gtk_text_view_set_editable(GTK_TEXT_VIEW(text_view), TRUE);
-    gtk_text_view_set_cursor_visible(GTK_TEXT_VIEW(text_view), TRUE);
-    gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(text_view), GTK_WRAP_WORD_CHAR);
+    top_bar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
+    gtk_box_pack_start(GTK_BOX(main_box), top_bar, FALSE, FALSE, 5);
 
-    gtk_container_add(GTK_CONTAINER(scroll), text_view);
+    plus_button = gtk_button_new_with_label("+");
+    gtk_box_pack_start(GTK_BOX(top_bar), plus_button, FALSE, FALSE, 5);
 
-    g_signal_connect(text_view, "key-press-event", G_CALLBACK(on_key_press), NULL);
+    notebook = gtk_notebook_new();
+    gtk_box_pack_start(GTK_BOX(main_box), notebook, TRUE, TRUE, 0);
 
-    appendOutput("Welcome to Termulate\n");
-    appendOutput("\n");
-appendOutput(
-"████████╗███████╗██████╗ ███╗   ███╗██╗   ██╗██╗      █████╗ ████████╗███████╗\n"
-"╚══██╔══╝██╔════╝██╔══██╗████╗ ████║██║   ██║██║     ██╔══██╗╚══██╔══╝██╔════╝\n"
-"   ██║   █████╗  ██████╔╝██╔████╔██║██║   ██║██║     ███████║   ██║   █████╗\n"
-"   ██║   ██╔══╝  ██╔══██╗██║╚██╔╝██║██║   ██║██║     ██╔══██║   ██║   ██╔══╝\n"
-"   ██║   ███████╗██║  ██║██║ ╚═╝ ██║╚██████╔╝███████╗██║  ██║   ██║   ███████╗\n"
-"   ╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝ ╚═════╝ ╚══════╝╚═╝  ╚═╝   ╚═╝   ╚══════╝\n"
-);
-appendOutput("\n");
-    appendOutput("Type 'help' to see available commands.\n\n");
-    appendOutput("Termulate> ");
+    g_signal_connect(plus_button, "clicked", G_CALLBACK(create_new_session), NULL);
+
+    create_new_session(NULL, NULL);
 
     gtk_widget_show_all(window);
 

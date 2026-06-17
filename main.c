@@ -51,16 +51,14 @@ gboolean on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer data)
         char *input = prompt ? prompt + 1 : line;
 
         while (*input == ' ')
-        {
             input++;
-        }
 
         appendOutput("\n");
 
         if (strcmp(input, "clear") == 0)
         {
             clearScreen();
-            appendOutput("Termulate> ");
+            appendOutput("C:\\Users\\perci> ");
         }
         else if (strcmp(input, "exit") == 0)
         {
@@ -80,7 +78,7 @@ gboolean on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer data)
 
 void add_welcome_message(void)
 {
-    appendOutput("Welcome to Termulate GUI\n\n");
+    appendOutput("Welcome to Termulate\n\n");
 
     appendOutput(
 "████████╗███████╗██████╗ ███╗   ███╗██╗   ██╗██╗      █████╗ ████████╗███████╗\n"
@@ -93,6 +91,28 @@ void add_welcome_message(void)
 
     appendOutput("\nType 'help' to see available commands.\n\n");
     appendOutput("Termulate> ");
+}
+
+GtkWidget *create_tab_label(const char *title)
+{
+    GtkWidget *box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
+
+    GtkWidget *icon = gtk_label_new("▣");
+    GtkWidget *label = gtk_label_new(title);
+    GtkWidget *close = gtk_label_new("×");
+
+    gtk_style_context_add_class(gtk_widget_get_style_context(box), "tab-box");
+    gtk_style_context_add_class(gtk_widget_get_style_context(icon), "tab-icon");
+    gtk_style_context_add_class(gtk_widget_get_style_context(label), "tab-title");
+    gtk_style_context_add_class(gtk_widget_get_style_context(close), "tab-close");
+
+    gtk_box_pack_start(GTK_BOX(box), icon, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(box), label, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(box), close, FALSE, FALSE, 6);
+
+    gtk_widget_show_all(box);
+
+    return box;
 }
 
 void create_new_session(GtkWidget *button, gpointer data)
@@ -111,11 +131,15 @@ void create_new_session(GtkWidget *button, gpointer data)
     g_signal_connect(new_text_view, "key-press-event", G_CALLBACK(on_key_press), NULL);
 
     char tab_name[50];
-    snprintf(tab_name, sizeof(tab_name), "Session %d", session_count);
 
-    GtkWidget *label = gtk_label_new(tab_name);
+    if (session_count == 1)
+        snprintf(tab_name, sizeof(tab_name), "Session");
+    else
+        snprintf(tab_name, sizeof(tab_name), "Session %d", session_count);
 
-    int page_num = gtk_notebook_append_page(GTK_NOTEBOOK(notebook), scroll, label);
+    GtkWidget *tab_label = create_tab_label(tab_name);
+
+    int page_num = gtk_notebook_append_page(GTK_NOTEBOOK(notebook), scroll, tab_label);
     gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook), page_num);
 
     text_view = new_text_view;
@@ -132,72 +156,102 @@ void apply_dark_theme(void)
         provider,
 
         "window {"
-        "   background-color: #0b0f10;"
-        "}"
-
-        ".top-bar {"
-        "   background-color: #111718;"
-        "   padding: 6px;"
-        "   border-bottom: 1px solid #1f2a2c;"
-        "}"
-
-        ".app-title {"
-        "   color: #00ff88;"
-        "   font-family: Consolas, monospace;"
-        "   font-size: 15px;"
-        "   font-weight: bold;"
-        "   margin-left: 8px;"
-        "}"
-
-        ".plus-button {"
-        "   background: #1b2527;"
-        "   color: #00ff88;"
-        "   border-radius: 8px;"
-        "   border: 1px solid #263638;"
-        "   padding: 4px 12px;"
-        "   font-size: 18px;"
-        "   font-weight: bold;"
-        "}"
-
-        ".plus-button:hover {"
-        "   background: #243133;"
+        "   background-color: #0c0c0c;"
         "}"
 
         "notebook {"
-        "   background-color: #0b0f10;"
+        "   background-color: #0c0c0c;"
         "   border: none;"
         "}"
 
+        "notebook header {"
+        "   background-color: #2b2b2b;"
+        "   border: none;"
+        "   min-height: 34px;"
+        "   padding: 0;"
+        "}"
+
+        "notebook tabs {"
+        "   background-color: #2b2b2b;"
+        "   min-height: 34px;"
+        "}"
+
         "notebook tab {"
-        "   background: #111718;"
-        "   color: #8cffc1;"
-        "   padding: 7px 14px;"
-        "   border-radius: 8px 8px 0 0;"
-        "   margin: 2px;"
+        "   background: #1f1f1f;"
+        "   color: #f1f1f1;"
+        "   padding: 5px 12px;"
+        "   border-radius: 6px 6px 0 0;"
+        "   margin: 3px 2px 0 4px;"
+        "   border: none;"
+        "   min-height: 28px;"
+        "}"
+
+        "notebook tab:hover {"
+        "   background: #252525;"
         "}"
 
         "notebook tab:checked {"
-        "   background: #182224;"
-        "   color: #00ff88;"
-        "   border-bottom: 2px solid #00ff88;"
+        "   background: #0c0c0c;"
+        "   color: #ffffff;"
+        "   border-bottom: 2px solid #4da3ff;"
+        "}"
+
+        ".tab-box {"
+        "   background: transparent;"
+        "   padding: 0;"
+        "}"
+
+        ".tab-icon {"
+        "   color: #ffffff;"
+        "   font-size: 10px;"
+        "}"
+
+        ".tab-title {"
+        "   color: #ffffff;"
+        "   font-family: Segoe UI, Arial, sans-serif;"
+        "   font-size: 12px;"
+        "}"
+
+        ".tab-close {"
+        "   color: #ffffff;"
+        "   font-size: 14px;"
+        "}"
+
+        ".tab-close:hover {"
+        "   color: #ff6b6b;"
+        "}"
+
+        ".plus-button {"
+        "   background: #2b2b2b;"
+        "   color: #ffffff;"
+        "   border: none;"
+        "   font-size: 16px;"
+        "   padding: 2px 10px;"
+        "   min-height: 28px;"
+        "   min-width: 34px;"
+        "   box-shadow: none;"
+        "}"
+
+        ".plus-button:hover {"
+        "   background: #3a3a3a;"
         "}"
 
         "textview {"
-        "   background-color: #0b0f10;"
-        "   color: #00ff88;"
+        "   background-color: #0c0c0c;"
+        "   color: #cccccc;"
         "   font-family: Consolas, monospace;"
         "   font-size: 15px;"
-        "   padding: 12px;"
+        "   padding: 8px;"
         "}"
 
         "textview text {"
-        "   background-color: #0b0f10;"
-        "   color: #00ff88;"
-        "   caret-color: #00ff88;"
+        "   background-color: #0c0c0c;"
+        "   color: #cccccc;"
+        "   caret-color: #ffffff;"
         "}"
 
         "scrolledwindow {"
-        "   background-color: #0b0f10;"
+        "   background-color: #0c0c0c;"
         "   border: none;"
         "}",
 
@@ -213,43 +267,48 @@ void apply_dark_theme(void)
 
     g_object_unref(provider);
 }
-
 int main(int argc, char *argv[])
 {
     gtk_init(&argc, &argv);
 
     GtkWidget *window;
     GtkWidget *main_box;
-    GtkWidget *top_bar;
     GtkWidget *plus_button;
 
     apply_dark_theme();
 
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_title(GTK_WINDOW(window), "Termulate GUI");
-    gtk_window_set_default_size(GTK_WINDOW(window), 900, 550);
+    gtk_window_set_title(GTK_WINDOW(window), "Termulate");
+    gtk_window_set_default_size(GTK_WINDOW(window), 1100, 650);
 
     g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
 
     main_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_container_add(GTK_CONTAINER(window), main_box);
 
-    top_bar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
-    gtk_style_context_add_class(gtk_widget_get_style_context(top_bar), "top-bar");
-    gtk_box_pack_start(GTK_BOX(main_box), top_bar, FALSE, FALSE, 0);
-
-    GtkWidget *title = gtk_label_new("Termulate");
-    gtk_style_context_add_class(gtk_widget_get_style_context(title), "app-title");
-    gtk_box_pack_start(GTK_BOX(top_bar), title, FALSE, FALSE, 8);
-
-    plus_button = gtk_button_new_with_label("+");
-    gtk_style_context_add_class(gtk_widget_get_style_context(plus_button), "plus-button");
-    gtk_box_pack_end(GTK_BOX(top_bar), plus_button, FALSE, FALSE, 8);
-
     notebook = gtk_notebook_new();
+    gtk_notebook_set_scrollable(GTK_NOTEBOOK(notebook), TRUE);
     gtk_box_pack_start(GTK_BOX(main_box), notebook, TRUE, TRUE, 0);
 
-    g_signal_connect(plus_button, "clicked", G_CALLBACK(create_new_session), NULL);
+    plus_button = gtk_button_new_with_label("+");
+
+    gtk_style_context_add_class(
+        gtk_widget_get_style_context(plus_button),
+        "plus-button"
+    );
+
+    gtk_notebook_set_action_widget(
+        GTK_NOTEBOOK(notebook),
+        plus_button,
+        GTK_PACK_START
+    );
+
+    g_signal_connect(
+        plus_button,
+        "clicked",
+        G_CALLBACK(create_new_session),
+        NULL
+    );
 
     create_new_session(NULL, NULL);
 

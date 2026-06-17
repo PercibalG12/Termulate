@@ -291,7 +291,6 @@ int main(int argc, char *argv[])
     gtk_box_pack_start(GTK_BOX(main_box), notebook, TRUE, TRUE, 0);
 
     plus_button = gtk_button_new_with_label("+");
-
     gtk_style_context_add_class(
         gtk_widget_get_style_context(plus_button),
         "plus-button"
@@ -300,7 +299,7 @@ int main(int argc, char *argv[])
     gtk_notebook_set_action_widget(
         GTK_NOTEBOOK(notebook),
         plus_button,
-        GTK_PACK_START
+        GTK_PACK_END
     );
 
     g_signal_connect(
@@ -313,6 +312,7 @@ int main(int argc, char *argv[])
     create_new_session(NULL, NULL);
 
     gtk_widget_show_all(window);
+    gtk_widget_show(plus_button);
 
     gtk_main();
 
